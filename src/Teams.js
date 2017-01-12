@@ -1,63 +1,59 @@
 import React, { Component } from 'react';
 import { Button } from 'react-materialize'
 import { Table, Thead, Th, Tr, Td } from 'reactable';
-import $ from 'jquery';
+import Request from 'react-http-request';
+import fetchJsonp from 'fetch-jsonp'
 
 export class TeamsTable extends Component {
 
     getTeam(id) {
         var self = this;
-		return $.ajax({
-			url: 'http://jiujitsuteam.herokuapp.com/teams/' + id + '.json', 
-			dataType: 'jsonp',
-			crossDomain: true,
-			success: function(team) {
-                if(team.places.length === 0) {
-                    self.state.teams.push({
+        return fetchJsonp('http://jiujitsuteam.herokuapp.com/teams/' + id + '.json')
+        .then(function(response) {
+            return response.json();
+        }).then(function(team){
+            if(team.places.length === 0) {
+                self.state.teams.push({
+                    equipe: team.name, 
+                    academia: '-', 
+                    endereco: '-'
+                });
+            } else {
+                team.places.map(function(place) {
+                    return self.state.teams.push({
                         equipe: team.name, 
-                        academia: '-', 
-                        endereco: '-'
-                    });
-                } else {
-                    team.places.map(function(place) {
-                       return self.state.teams.push({
-                            equipe: team.name, 
-                            academia: place.gym.title, 
-                            endereco: place.gym.address, 
-                            location: {
-                                lat: parseFloat(place.gym.lat), 
-                                lng: parseFloat(place.gym.lng), 
-                            }
-                        }); 
-                    });
-                }
-				
-			}
-		});
+                        academia: place.gym.title, 
+                        endereco: place.gym.address, 
+                        location: {
+                            lat: parseFloat(place.gym.lat), 
+                            lng: parseFloat(place.gym.lng), 
+                        }
+                    }); 
+                });
+            }
+        });
+        
     }
 
     getTeams() {
         var self = this;
-		$.ajax({
-			url: 'http://jiujitsuteam.herokuapp.com/teams.json', 
-			dataType: 'jsonp',
-			crossDomain: true,
-			success: function(response) {
-				
-                var promises = [];
-                response.map(function(team) {
-                    return promises.push(self.getTeam(team.id));
-                })
+        return fetchJsonp('http://jiujitsuteam.herokuapp.com/teams.json')
+        .then(function(response) {
+            return response.json();
+        }).then(function(json ){
+            
+            var promises = [];
+            json.map(function(team) {
+                return promises.push(self.getTeam(team.id));
+            })
 
-                Promise.all(promises).then(function() {
-                    self.setState({ teams: self.state.teams });
-                }, function(err) {
-                    // ...
-                });
-                
+            Promise.all(promises).then(function() {
+                self.setState({ teams: self.state.teams });
+            }, function(err) {
+                // ...
+            });
 
-			}
-		});
+        });
     }
 
     constructor() {

@@ -35,7 +35,7 @@ export class TeamsTable extends Component {
         
     }
 
-    getTeams() {
+    getTeams(errorCallback) {
         var self = this;
         return fetchJsonp('http://jiujitsuteam.herokuapp.com/teams.json')
         .then(function(response) {
@@ -50,7 +50,7 @@ export class TeamsTable extends Component {
             Promise.all(promises).then(function() {
                 self.setState({ teams: self.state.teams });
             }, function(err) {
-                // ...
+                errorCallback(err)
             });
 
         });
@@ -63,7 +63,9 @@ export class TeamsTable extends Component {
 	}
 
 	componentDidMount() {
-		this.getTeams();
+		this.getTeams(function() {
+            alert('Erro ao carregar equipes!');
+        });
 	}
 
     render() {
